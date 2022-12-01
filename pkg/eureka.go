@@ -50,7 +50,6 @@ type RegistrationForm struct {
 	ServiceHost string
 	ServicePort int
 	InstanceId  string
-	AppProfile  string
 	ServiceUrl  string
 }
 
@@ -79,9 +78,6 @@ func (form RegistrationForm) RegisterService() error {
 		return err
 	}
 
-	fmt.Println("Waiting for 10 seconds for application to start properly ...")
-	time.Sleep(10 * time.Second)
-
 	fmt.Println("Updating the status to: UP")
 	bodyUP := ConstructRegistrationBody(form, "UP")
 
@@ -105,18 +101,17 @@ func (form RegistrationForm) UnRegisterEurekaService() {
 func (form RegistrationForm) Heartbeat() {
 	serviceName := strings.ToUpper(form.ServiceName)
 	putUrl := form.ServiceUrl + serviceName + "/" + form.ServiceName + ":" + form.InstanceId
-	res, err := tools.HttpPutReq(putUrl, nil, nil)
+	_, err := tools.HttpPutReq(putUrl, nil, nil)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(res)
 	fmt.Println("Heartbeat sent ...")
 }
 
 func (form RegistrationForm) SendHeartBeat() {
 	for {
 		form.Heartbeat()
-		time.Sleep(25 * time.Second)
+		time.Sleep(20 * time.Second)
 	}
 }
 
