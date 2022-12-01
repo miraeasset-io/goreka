@@ -53,17 +53,6 @@ type RegistrationForm struct {
 	ServiceUrl  string
 }
 
-func Init(form RegistrationForm) {
-	fmt.Println("Initializing service discovery ...")
-
-	err := form.RegisterService()
-	if err != nil {
-		panic(err)
-	}
-
-	go form.SendHeartBeat()
-}
-
 func (form RegistrationForm) RegisterService() error {
 	fmt.Println("Registering service with status: STARTING")
 	body := ConstructRegistrationBody(form, "STARTING")
