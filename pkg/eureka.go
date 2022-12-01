@@ -98,19 +98,23 @@ func (form RegistrationForm) UnRegisterEurekaService() {
 	fmt.Println(res)
 }
 
-func (form RegistrationForm) Heartbeat() {
+func (form RegistrationForm) Heartbeat() error {
 	serviceName := strings.ToUpper(form.ServiceName)
 	putUrl := form.ServiceUrl + serviceName + "/" + form.ServiceName + ":" + form.InstanceId
 	_, err := tools.HttpPutReq(putUrl, nil, nil)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	fmt.Println("Heartbeat sent ...")
+	return nil
 }
 
 func (form RegistrationForm) SendHeartBeat() {
 	for {
-		form.Heartbeat()
+		err := form.Heartbeat()
+		if err != nil {
+			fmt.Println("Error!: ", err)
+		}
 		time.Sleep(20 * time.Second)
 	}
 }
