@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type OperationBody interface {
@@ -64,7 +63,7 @@ func HttpPutReq(urlToPost string, body OperationBody, headers map[string]string)
 	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest(http.MethodPut, urlToPost, &buffer)
 	if err != nil {
-		log.Print("Error while creating the http request  " + err.Error())
+		fmt.Println("Error while creating the http request  " + err.Error())
 		return nil, errors.New("Error while creating http request " + err.Error())
 	}
 
@@ -75,7 +74,7 @@ func HttpPutReq(urlToPost string, body OperationBody, headers map[string]string)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Print("Error while making PUT call " + err.Error())
+		fmt.Println("Error while making PUT call " + err.Error())
 		return nil, errors.New("Error while making PUT call " + err.Error())
 	}
 

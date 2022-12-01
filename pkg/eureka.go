@@ -3,15 +3,8 @@ package goreka
 import (
 	"fmt"
 	"goreka/tools"
-	"runtime"
-	"strconv"
 	"strings"
 	"time"
-
-	"github.com/spf13/viper"
-
-	"github.com/carlescere/scheduler"
-	log "github.com/sirupsen/logrus"
 )
 
 type AppRegistrationBody struct {
@@ -52,7 +45,7 @@ type Metadata struct {
 	Version float32 `json:"version"`
 }
 
-type RegistrationManager struct {
+type RegistrationForm struct {
 	ServiceName string
 	ServiceHost string
 	ServicePort int
@@ -61,84 +54,73 @@ type RegistrationManager struct {
 	ServiceUrl  string
 }
 
-func RegisterService(erm RegistrationManager) {
-	log.Println("Registering service with status: STARTING")
-	body := ConstructRegistrationBody(erm, "STARTING")
+func Init(form RegistrationForm) {
+	fmt.Println("Initializing service discovery ...")
 
-	serviceName := strings.ToUpper(erm.ServiceName)
+	err := form.RegisterService()
+	if err != nil {
+		panic(err)
+	}
 
-	postUrl := erm.ServiceUrl + serviceName
-	log.Debugln(postUrl)
+	go form.SendHeartBeat()
+}
+
+func (form RegistrationForm) RegisterService() error {
+	fmt.Println("Registering service with status: STARTING")
+	body := ConstructRegistrationBody(form, "STARTING")
+
+	serviceName := strings.ToUpper(form.ServiceName)
+
+	postUrl := form.ServiceUrl + serviceName
+	fmt.Println(postUrl)
 
 	_, err := tools.HttpPostReq(postUrl, body, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	waitSec, _ := strconv.Atoi(fmt.Sprintf("%v", viper.Get("STARTUP_WAIT_SEC")))
-	d := time.Duration(waitSec)
+	fmt.Println("Waiting for 10 seconds for application to start properly ...")
+	time.Sleep(10 * time.Second)
 
-	log.Printf("Waiting for %d seconds for application to start properly ...", waitSec)
-	time.Sleep(d * time.Second)
+	fmt.Println("Updating the status to: UP")
+	bodyUP := ConstructRegistrationBody(form, "UP")
 
-	log.Print("Updating the status to: UP")
-	bodyUP := ConstructRegistrationBody(erm, "UP")
-
-	_, err = tools.HttpPostReq(erm.ServiceUrl+serviceName, bodyUP, nil)
+	_, err = tools.HttpPostReq(form.ServiceUrl+serviceName, bodyUP, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
-func SendHeartBeat(erm RegistrationManager) {
-	serviceName := strings.ToUpper(erm.ServiceName)
-	heartBeat := func() {
-		putUrl := erm.ServiceUrl + serviceName + "/" + erm.ServiceName + ":" + erm.InstanceId
-		res, err := tools.HttpPutReq(putUrl, nil, nil)
-		if err != nil {
-			log.Errorln(err)
-		}
-		log.Debugln(res)
-		log.Debugln("Heartbeat sent ...")
-	}
-
-	// Run every 25 seconds but not now.
-	res, err := scheduler.Every(25).Seconds().Run(heartBeat)
+func (form RegistrationForm) UnRegisterEurekaService() {
+	fmt.Println("UnRegistering service from eureka ...")
+	res, err := tools.HttpPostReq(form.ServiceUrl, nil, nil)
 	if err != nil {
-		log.Errorln(err)
+		fmt.Println(err)
 	}
-	log.Debugln(res)
-
-	runtime.Goexit()
+	fmt.Println(res)
 }
 
-func InitServiceDiscovery(Config Config) *RegistrationManager {
-	log.Infoln("Initializing service discovery ...")
-
-	manager := new(RegistrationManager)
-	manager.AppProfile = Config.AppProfile
-	manager.InstanceId = Config.InstanceId
-	manager.ServiceName = Config.ServiceName
-	manager.ServiceHost = Config.ServiceHost
-	manager.ServicePort = Config.ServicePort
-	manager.ServiceUrl = Config.EurekaUrl
-
-	RegisterService(*manager)
-	go SendHeartBeat(*manager)
-
-	return manager
-}
-
-func UnRegisterEurekaService(rm RegistrationManager) {
-	log.Warningln("UnRegistering service from eureka ...")
-	res, err := tools.HttpPostReq(rm.ServiceUrl, nil, nil)
+func (form RegistrationForm) Heartbeat() {
+	serviceName := strings.ToUpper(form.ServiceName)
+	putUrl := form.ServiceUrl + serviceName + "/" + form.ServiceName + ":" + form.InstanceId
+	res, err := tools.HttpPutReq(putUrl, nil, nil)
 	if err != nil {
-		log.Errorln(err)
+		fmt.Println(err)
 	}
-	log.Debugln(res)
+	fmt.Println(res)
+	fmt.Println("Heartbeat sent ...")
 }
 
-func ConstructRegistrationBody(erm RegistrationManager, status string) *AppRegistrationBody {
+func (form RegistrationForm) SendHeartBeat() {
+	for {
+		form.Heartbeat()
+		time.Sleep(25 * time.Second)
+	}
+}
+
+func ConstructRegistrationBody(erm RegistrationForm, status string) *AppRegistrationBody {
 	instanceId := erm.ServiceName + ":" + erm.InstanceId
 	servicePort := fmt.Sprintf("%d", erm.ServicePort)
 	hostAddress := erm.ServiceHost
