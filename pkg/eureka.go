@@ -109,7 +109,7 @@ func (form RegistrationForm) Heartbeat() (*http.Response, error) {
 	return resp, nil
 }
 
-func (form RegistrationForm) SendHeartBeat(freq int) {
+func (form RegistrationForm) SendHeartBeat() {
 	for {
 		resp, err := form.Heartbeat()
 		if err != nil {
@@ -118,7 +118,7 @@ func (form RegistrationForm) SendHeartBeat(freq int) {
 		if resp.StatusCode != 200 {
 			fmt.Println("Error!: ", resp.Status)
 		}
-		time.Sleep(time.Duration(freq) * time.Second)
+		time.Sleep(25 * time.Second)
 	}
 }
 
