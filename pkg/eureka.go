@@ -2,6 +2,7 @@ package goreka
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -97,24 +98,27 @@ func (form RegistrationForm) UnRegisterEurekaService() {
 	fmt.Println(res)
 }
 
-func (form RegistrationForm) Heartbeat() error {
+func (form RegistrationForm) Heartbeat() (*http.Response, error) {
 	serviceName := strings.ToUpper(form.ServiceName)
 	putUrl := form.EurekaUrl + serviceName + "/" + form.ServiceName + ":" + form.InstanceId
-	_, err := tools.HttpPutReq(putUrl, nil, nil)
+	resp, err := tools.HttpPutReq(putUrl, nil, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fmt.Println("Heartbeat sent ...")
-	return nil
+	return resp, nil
 }
 
-func (form RegistrationForm) SendHeartBeat() {
+func (form RegistrationForm) SendHeartBeat(freq int) {
 	for {
-		err := form.Heartbeat()
+		resp, err := form.Heartbeat()
 		if err != nil {
 			fmt.Println("Error!: ", err)
 		}
-		time.Sleep(20 * time.Second)
+		if resp.StatusCode != 200 {
+			fmt.Println("Error!: ", resp.Status)
+		}
+		time.Sleep(time.Duration(freq) * time.Second)
 	}
 }
 

@@ -37,8 +37,12 @@ func TestEurekaHeartbeat(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = form.Heartbeat()
+	resp, err := form.Heartbeat()
 	if err != nil {
 		t.Error(err)
+	}
+
+	if resp.StatusCode != 200 {
+		t.Error("Heartbeat failed")
 	}
 }
