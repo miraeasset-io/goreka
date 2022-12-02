@@ -2,9 +2,10 @@ package goreka
 
 import (
 	"fmt"
-	"goreka/tools"
 	"strings"
 	"time"
+
+	"github.com/miraeasset-io/goreka/tools"
 )
 
 type AppRegistrationBody struct {
