@@ -13,8 +13,7 @@ func TestEurekaRegistration(t *testing.T) {
 		ServiceName: "test-service",
 		ServiceHost: "localhost",
 		ServicePort: 8080,
-		InstanceId:  "test-service-1",
-		ServiceUrl:  "https://" + username + ":" + password + "@dev-jhipster.miraeasset.io/eureka/apps/",
+		EurekaUrl:   "https://" + username + ":" + password + "@dev-jhipster.miraeasset.io/eureka/apps/",
 	}
 
 	err := form.RegisterService()
@@ -30,8 +29,7 @@ func TestEurekaHeartbeat(t *testing.T) {
 		ServiceName: "test-service",
 		ServiceHost: "localhost",
 		ServicePort: 8080,
-		InstanceId:  "test-service-1",
-		ServiceUrl:  "https://" + username + ":" + password + "@dev-jhipster.miraeasset.io/eureka/apps/",
+		EurekaUrl:   "https://" + username + ":" + password + "@dev-jhipster.miraeasset.io/eureka/apps/",
 	}
 
 	err := form.RegisterService()

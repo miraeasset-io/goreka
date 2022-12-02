@@ -51,7 +51,16 @@ type RegistrationForm struct {
 	ServiceHost string
 	ServicePort int
 	InstanceId  string
-	ServiceUrl  string
+	EurekaUrl   string
+}
+
+func NewClient(serviceName, serviceHost, eurekaUrl string) RegistrationForm {
+	return RegistrationForm{
+		ServiceName: serviceName,
+		ServiceHost: serviceHost,
+		InstanceId:  serviceName + "-" + tools.GenerateUUID(),
+		EurekaUrl:   eurekaUrl,
+	}
 }
 
 func (form RegistrationForm) RegisterService() error {
@@ -60,7 +69,7 @@ func (form RegistrationForm) RegisterService() error {
 
 	serviceName := strings.ToUpper(form.ServiceName)
 
-	postUrl := form.ServiceUrl + serviceName
+	postUrl := form.EurekaUrl + serviceName
 	fmt.Println(postUrl)
 
 	_, err := tools.HttpPostReq(postUrl, body, nil)
@@ -71,7 +80,7 @@ func (form RegistrationForm) RegisterService() error {
 	fmt.Println("Updating the status to: UP")
 	bodyUP := ConstructRegistrationBody(form, "UP")
 
-	_, err = tools.HttpPostReq(form.ServiceUrl+serviceName, bodyUP, nil)
+	_, err = tools.HttpPostReq(form.EurekaUrl+serviceName, bodyUP, nil)
 	if err != nil {
 		return err
 	}
@@ -81,7 +90,7 @@ func (form RegistrationForm) RegisterService() error {
 
 func (form RegistrationForm) UnRegisterEurekaService() {
 	fmt.Println("UnRegistering service from eureka ...")
-	res, err := tools.HttpPostReq(form.ServiceUrl, nil, nil)
+	res, err := tools.HttpPostReq(form.EurekaUrl, nil, nil)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -90,7 +99,7 @@ func (form RegistrationForm) UnRegisterEurekaService() {
 
 func (form RegistrationForm) Heartbeat() error {
 	serviceName := strings.ToUpper(form.ServiceName)
-	putUrl := form.ServiceUrl + serviceName + "/" + form.ServiceName + ":" + form.InstanceId
+	putUrl := form.EurekaUrl + serviceName + "/" + form.ServiceName + ":" + form.InstanceId
 	_, err := tools.HttpPutReq(putUrl, nil, nil)
 	if err != nil {
 		return err
