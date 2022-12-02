@@ -111,7 +111,13 @@ func (form RegistrationForm) SendHeartBeat() {
 func ConstructRegistrationBody(erm RegistrationForm, status string) *AppRegistrationBody {
 	instanceId := erm.ServiceName + ":" + erm.InstanceId
 	servicePort := fmt.Sprintf("%d", erm.ServicePort)
-	hostAddress := erm.ServiceHost
+
+	ip, err := tools.ExternalIP()
+	if err != nil {
+		fmt.Println(err)
+	}
+	hostAddress := ip
+
 	statusPageUrl := hostAddress + ":" + servicePort + "/health"
 	healthCheckUrl := hostAddress + ":" + servicePort + "/health"
 	homePageUrl := hostAddress + ":" + servicePort
