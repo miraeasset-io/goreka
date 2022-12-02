@@ -1,14 +1,20 @@
 package goreka
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestEurekaRegistration(t *testing.T) {
+	username := os.Getenv("EUREKA_USERNAME")
+	password := os.Getenv("EUREKA_PASSWORD")
+
 	form := RegistrationForm{
 		ServiceName: "test-service",
 		ServiceHost: "localhost",
 		ServicePort: 8080,
 		InstanceId:  "test-service-1",
-		ServiceUrl:  "https://admin:M1rAeA553t2910@dev-jhipster.miraeasset.io/eureka/apps/",
+		ServiceUrl:  "https://" + username + ":" + password + "@dev-jhipster.miraeasset.io/eureka/apps/",
 	}
 
 	err := form.RegisterService()
@@ -18,12 +24,14 @@ func TestEurekaRegistration(t *testing.T) {
 }
 
 func TestEurekaHeartbeat(t *testing.T) {
+	username := os.Getenv("EUREKA_USERNAME")
+	password := os.Getenv("EUREKA_PASSWORD")
 	form := RegistrationForm{
 		ServiceName: "test-service",
 		ServiceHost: "localhost",
 		ServicePort: 8080,
 		InstanceId:  "test-service-1",
-		ServiceUrl:  "https://admin:M1rAeA553t2910@dev-jhipster.miraeasset.io/eureka/apps/",
+		ServiceUrl:  "https://" + username + ":" + password + "@dev-jhipster.miraeasset.io/eureka/apps/",
 	}
 
 	err := form.RegisterService()
